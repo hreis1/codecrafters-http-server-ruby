@@ -15,7 +15,9 @@ loop do
   in "/" 
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
   in "/index.html"
-    client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"  
+    client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
+  in "/echo/abc"
+    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\nabc"
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
   end
