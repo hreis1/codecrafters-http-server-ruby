@@ -9,7 +9,7 @@ server = TCPServer.new("localhost", 4221)
 
 loop do
   client_socket, client_address = server.accept
-  verb, path, protocol = client_socket.readline.split(" ")
+  verb, path, protocol = client_socket.gets.split(" ")
   case path
   in "/" 
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
