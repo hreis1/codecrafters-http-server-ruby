@@ -9,6 +9,14 @@ server = TCPServer.new("localhost", 4221)
 
 loop do
   client_socket, client_address = server.accept
-  client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
+  verb, path, protocol = client_socket.readline.split(" ")
+  case path
+  in "/" 
+    client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
+  in "/index.html"
+    client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"  
+  else
+    client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
+  end
   client_socket.close
 end
