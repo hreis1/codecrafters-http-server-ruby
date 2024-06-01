@@ -1,4 +1,7 @@
 require "socket"
+require "zlib"
+require 'base64'
+require 'stringio'
 
 server = TCPServer.new("localhost", 4221)
 
@@ -25,12 +28,22 @@ loop do
         gzip = true
       end
     end
+    def enconding_string(value)
+      buffer = StringIO.new
+      gzip_writer = Zlib::GzipWriter.new(buffer)
+      gzip_writer.write(value)
+      gzip_writer.close
+      buffer.string
+    end
     if invalid_headers.any? && gzip
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+      compressed_data = enconding_string(content)
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.length}\r\n\r\n#{compressed_data}"
     elsif invalid_headers.any?
       client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
     else
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+      compressed_data = enconding_string(content)
+      puts compressed_data.length
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.size}\r\n\r\n#{compressed_data}"
     end
   when /\/user-agent/
     agent = headers["user-agent"]
