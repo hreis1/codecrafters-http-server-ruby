@@ -1,10 +1,5 @@
 require "socket"
 
-# You can use print statements as follows for debugging, they'll be visible when running tests.
-print("Logs from your program will appear here!")
-
-# Uncomment this to pass the first stage
-#
 server = TCPServer.new("localhost", 4221)
 
 loop do
@@ -21,7 +16,11 @@ loop do
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
   when /\/echo\/.*/
     content = path.split("/").last
-    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+    if headers['Accept-Encoding'] == 'gzip'
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+    else
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+    end
   when /\/user-agent/
     agent = headers['User-Agent']
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: #{agent.length}\r\n\r\n#{agent}"
