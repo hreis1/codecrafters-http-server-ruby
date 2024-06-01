@@ -11,6 +11,11 @@ loop do
   client_socket, client_address = server.accept
   request = client_socket.gets
   verb, path, protocol = request.split(" ")
+  headers = {}
+  while line = client_socket.gets.split(' ', 2)
+    break if line[0] == ""
+    headers[line[0].chop] = line[1].strip
+  end
   case path
   when "/"
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
@@ -18,8 +23,7 @@ loop do
     content = path.split("/").last
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
   when /\/user-agent/
-    client_socket.gets
-    agent = client_socket.gets.split("User-Agent: ").last.strip
+    agent = headers['User-Agent']
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: #{agent.length}\r\n\r\n#{agent}"
   when /\/files/
     filename = path.split("/").last
@@ -33,15 +37,13 @@ loop do
         client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
       end
     else
-      client_socket.gets
-      client_socket.gets
-      client_socket.gets
-      content_length = client_socket.gets.split("Content-Length: ").last.strip.to_i
-      client_socket.gets
-      client_socket.gets
-      content = client_socket.read(content_length)
-      File.write(file_path, content)
-      client_socket.puts "HTTP/1.1 201 Created\r\n\r\n"
+      content = client_socket.read(headers['Content-Length'].to_i)
+      begin
+        File.write(file_path, content)
+        client_socket.puts "HTTP/1.1 201 Created\r\n\r\n"
+      rescue
+        client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
+      end
     end
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
