@@ -21,6 +21,15 @@ loop do
     client_socket.gets
     agent = client_socket.gets.split("User-Agent: ").last.strip
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: #{agent.length}\r\n\r\n#{agent}"
+  when /\/files/
+    filename = path.split("/").last
+    begin
+      directory = ARGV[1]
+      file = File.open("#{directory+filename}", 'r').read
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: #{file.length}\r\n\r\n#{file}"
+    rescue
+      client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
+    end
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
   end
