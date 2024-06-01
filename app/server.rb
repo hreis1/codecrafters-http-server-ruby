@@ -19,9 +19,8 @@ loop do
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
   when /\/user-agent/
     client_socket.gets
-    user-agent = client_socket.gets.split("User-agent:")
-    puts user-agent
-    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nfoobar/1.2.3"
+    agent = client_socket.gets.split("User-Agent: ").last.strip
+    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: #{agent.length}\r\n\r\n#{agent}"
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
   end
