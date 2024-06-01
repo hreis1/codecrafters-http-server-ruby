@@ -23,12 +23,25 @@ loop do
     client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: #{agent.length}\r\n\r\n#{agent}"
   when /\/files/
     filename = path.split("/").last
-    begin
-      directory = ARGV[1]
-      file = File.open("#{directory+filename}", 'r').read
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: #{file.length}\r\n\r\n#{file}"
-    rescue
-      client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
+    directory = ARGV[1]
+    file_path = directory+filename
+    if verb == 'GET'
+      begin
+        file = File.open("#{file_path}", "r").read
+        client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: #{file.length}\r\n\r\n#{file}"
+      rescue
+        client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
+      end
+    else
+      client_socket.gets
+      client_socket.gets
+      client_socket.gets
+      content_length = client_socket.gets.split("Content-Length: ").last.strip.to_i
+      client_socket.gets
+      client_socket.gets
+      content = client_socket.read(content_length)
+      File.write(file_path, content)
+      client_socket.puts "HTTP/1.1 201 Created\r\n\r\n"
     end
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
