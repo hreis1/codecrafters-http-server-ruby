@@ -42,8 +42,7 @@ loop do
       client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
     else
       compressed_data = enconding_string(content)
-      puts compressed_data.length
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.size}\r\n\r\n#{compressed_data}"
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.unpack1('H*').size}\r\n\r\n#{compressed_data.unpack1('H*')}"
     end
   when /\/user-agent/
     agent = headers["user-agent"]
