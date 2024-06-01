@@ -12,12 +12,11 @@ loop do
   request = client_socket.gets
   verb, path, protocol = request.split(" ")
   case path
-  in "/" 
+  when "/"
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
-  in "/index.html"
-    client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
-  in "/echo/abc"
-    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\nabc"
+  when /\/echo\/.*/
+    content = path.split("/").last
+    client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
   else
     client_socket.puts "HTTP/1.1 404 Not Found\r\n\r\n"
   end
