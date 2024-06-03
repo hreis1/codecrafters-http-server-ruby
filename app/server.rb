@@ -1,5 +1,5 @@
 require "socket"
-require "zlib"
+require 'zlib'
 require 'stringio'
 
 server = TCPServer.new("localhost", 4221)
@@ -17,8 +17,7 @@ loop do
   when "/"
     client_socket.puts "HTTP/1.1 200 OK\r\n\r\n"
   when /\/echo\/.*/
-    content = path.split('echo/').last
-
+    content = path.split("/").last
     invalid_headers = []
     gzip = false
     headers["accept-encoding"]&.split(', ')&.each do |header|
@@ -28,29 +27,26 @@ loop do
         gzip = true
       end
     end
-    def gzip_string(string)
-      w_gz = StringIO.new
-      z = Zlib::GzipWriter.new(w_gz)
-      z.write(string)
-      z.close
-      w_gz.string
+    def enconding_string(value)
+      buffer = StringIO.new
+      gzip_writer = Zlib::GzipWriter.new(buffer)
+      gzip_writer.write(value)
+      gzip_writer.close
+      buffer.string
     end
-    
-    def to_hex(string)
-      string.unpack1('H*')
-    end
-
     if invalid_headers.any? && gzip
-      compressed_data = gzip_string(content)
-      hex_representation = to_hex(compressed_data)
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{hex_representation.length}\r\n\r\n#{hex_representation}"
+      puts '1'
+      compressed_data = enconding_string(content)
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent: #{content}\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.size}\r\n\r\n#{compressed_data}"
     elsif invalid_headers.any?
+      puts '2'
       client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
+    elsif gzip
+      compressed_data = enconding_string(content)
+      res = "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{compressed_data.size}\r\n\r\n#{compressed_data}"
+      client_socket.puts res
     else
-      compressed_data = Zlib::Deflate.deflate(content)
-      hex_representation = to_hex(compressed_data)
-      puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{hex_representation.length}\r\n\r\n#{hex_representation}"
-      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length:#{hex_representation.length}\r\n\r\n#{hex_representation}"
+      client_socket.puts "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:#{content.length}\r\n\r\n#{content}"
     end
   when /\/user-agent/
     agent = headers["user-agent"]
